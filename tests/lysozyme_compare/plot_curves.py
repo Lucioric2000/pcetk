@@ -40,7 +40,7 @@ pagefooter = """
 unset multiplot
 """
 
-plotheader   = """
+plotheader = """
 %s
 set   size 0.33, 0.20
 set   origin %f, %f
@@ -54,39 +54,42 @@ plotfooter = """
 plotcommand = "plot \\\n"
 
 
-#===========================================================
-def writepage (counter, data):
+# ===========================================================
+def writepage(counter, data):
     content = [pageheader % ("page%02d.pdf" % counter)]
-    content.extend (data)
-    content.append (pagefooter)
-    f = open ("page%02d.gnuplot" % counter, "w")
-    f.writelines (content)
-    f.close ()
+    content.extend(data)
+    content.append(pagefooter)
+    f = open("page%02d.gnuplot" % counter, "w")
+    f.writelines(content)
+    f.close()
 
 
-#===========================================================
-proteinlabels = ("7LYZ", "2LZT", )
-nproteins = len (proteinlabels)
+# ===========================================================
+proteinlabels = (
+    "7LYZ",
+    "2LZT",
+)
+nproteins = len(proteinlabels)
 
 files = []
 for directory in proteinlabels:
-    files.extend (glob.glob ("curves/%s/*dat" % directory))
+    files.extend(glob.glob("curves/%s/*dat" % directory))
 
 
 proteins = {}
 for f in files:
-    foo, protein, filename = f.split ("/")
-    segment, site, label = filename.split ("_")
-    name   = site[:3]
-    serial = int (site[3:])
-    label  = label.split (".")[0]
+    foo, protein, filename = f.split("/")
+    segment, site, label = filename.split("_")
+    name = site[:3]
+    serial = int(site[3:])
+    label = label.split(".")[0]
 
-    if not proteins.has_key (protein):
+    if not proteins.has_key(protein):
         sites = {}
         proteins[protein] = sites
 
     sites = proteins[protein]
-    if sites.has_key (site):
+    if sites.has_key(site):
         sname, sserial, instances = sites[site]
     else:
         instances = {}
@@ -95,25 +98,25 @@ for f in files:
 
 
 instances = []
-protein_items = proteins.iteritems ()
+protein_items = proteins.iteritems()
 for protein_name, sites in protein_items:
 
-    site_items = sites.iteritems ()
+    site_items = sites.iteritems()
     for site_id, (site_name, site_serial, site_instances) in site_items:
 
-        instance_items = site_instances.iteritems ()
+        instance_items = site_instances.iteritems()
         for instance_label, instance_file in instance_items:
 
             entry = [site_serial, site_name, instance_label]
             if entry not in instances:
-                instances.append (entry)
-instances.sort ()
+                instances.append(entry)
+instances.sort()
 
 
-#===========================================================
-for counter, label in enumerate (proteinlabels):
+# ===========================================================
+for counter, label in enumerate(proteinlabels):
     title = label
-    plotcommand = "%s\"%%s\" w l ls %d t \"%s\"" % (plotcommand, counter + 1, title)
+    plotcommand = '%s"%%s" w l ls %d t "%s"' % (plotcommand, counter + 1, title)
     if counter < (nproteins - 1):
         plotcommand = "%s, \\\n" % plotcommand
     else:
@@ -121,8 +124,8 @@ for counter, label in enumerate (proteinlabels):
 
 
 output = []
-x, y   = 0, 0
-page   = 1
+x, y = 0, 0
+page = 1
 
 for site_serial, site_name, instance_label in instances:
     ox = x * 0.33
@@ -134,34 +137,34 @@ for site_serial, site_name, instance_label in instances:
     for protein_label in proteinlabels:
         sites = proteins[protein_label]
 
-        if sites.has_key (sitekey):
+        if sites.has_key(sitekey):
             site = sites[sitekey]
             sname, sserial, sinstances = site
             filename = sinstances[instance_label]
         else:
             filename = "x"
-        filenames.append (filename) 
+        filenames.append(filename)
 
     if x < 1 and y < 1:
         plotbefore = "set   key"
-        plotafter  = "\nunset key\n"
+        plotafter = "\nunset key\n"
     else:
         plotbefore = ""
-        plotafter  = ""
+        plotafter = ""
 
-    output.append (plotheader % (plotbefore, ox, oy, title))
-    output.append (plotcommand % tuple (filenames))
-    output.append (plotfooter % plotafter)
+    output.append(plotheader % (plotbefore, ox, oy, title))
+    output.append(plotcommand % tuple(filenames))
+    output.append(plotfooter % plotafter)
 
     x += 1
     if x > 2:
         x = 0
         y += 1
         if y > 3:
-            writepage (page, output)
+            writepage(page, output)
             y = 0
             page += 1
             output = []
 
 if output:
-  writepage (page, output)
+    writepage(page, output)
